@@ -1,27 +1,39 @@
 version: '3.8'
 
-networks:
-  monitoring:
-    driver: bridge
-
 services:
   grafana:
     image: grafana/grafana-enterprise:latest
-    ports:
-      - 3000:3000
     user: '472'
     volumes:
-      - ./grafana-storage:/var/lib/grafana
-    networks:
-      - monitoring
+      - grafana_data:/var/lib/grafana
+    network_mode: host
 
   prometheus:
     image: prom/prometheus:latest
-    ports:
-      - 9090:9090
     expose:
       - 9090
     volumes:
       - ./prometheus:/etc/prometheus
-    networks:
-      - monitoring
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.config.file=/etc/prometheus/web.yml
+      - --storage.tsdb.path=/prometheus
+    network_mode: host
+  
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    command:
+      - '--path.rootfs=/host'
+    network_mode: host
+    pid: host
+    restart: unless-stopped
+    expose:
+      - 9100
+    volumes:
+      - '/:/host:ro,rslave'
+
+volumes:
+  prometheus_data:
+  grafana_data:

@@ -1,2 +1,4 @@
 .idea
 grafana-storage
+prometheus_data
+prometheus
